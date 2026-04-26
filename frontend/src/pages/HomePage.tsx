@@ -17,7 +17,9 @@ export function HomePage() {
         </Button>
       }
     >
-      <TableGrid headers={headers} rows={8} />
+      <div className="border border-slate-700 bg-white">
+        <TableGrid headers={headers} rows={8} />
+      </div>
     </PageShell>
   )
 }
