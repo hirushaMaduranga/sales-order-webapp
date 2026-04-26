@@ -23,7 +23,7 @@ export function HomePage() {
           orders={orders}
           rows={rows}
           onRowDoubleClick={(orderId) => navigate(`/sales-order/${orderId}`)}
-          showData={false}
+          showData
         />
       </div>
     </PageShell>
