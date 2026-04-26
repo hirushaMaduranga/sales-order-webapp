@@ -95,6 +95,7 @@ export function SalesOrderPage() {
     }
     return createEmptyOrder()
   })
+  const [errors, setErrors] = useState<string[]>([])
 
   useEffect(() => {
     if (!isEditMode) {
@@ -225,7 +226,49 @@ export function SalesOrderPage() {
     })
   }
 
+  const validateForm = () => {
+    const messages: string[] = []
+
+    if (!formState.customerId) {
+      messages.push('Customer Name is required.')
+    }
+    if (!formState.invoiceNo.trim()) {
+      messages.push('Invoice No is required.')
+    }
+    if (!formState.invoiceDate.trim()) {
+      messages.push('Invoice Date is required.')
+    }
+
+    const usableRows = formState.lineItems.filter(hasLineItemData)
+    if (usableRows.length === 0) {
+      messages.push('At least one valid line item is required.')
+    }
+
+    formState.lineItems.forEach((item, index) => {
+      if (!hasLineItemData(item)) {
+        return
+      }
+      if (!item.itemId && !item.description) {
+        messages.push(`Line ${index + 1}: select an item.`)
+      }
+      if (item.quantity <= 0) {
+        messages.push(`Line ${index + 1}: quantity must be greater than 0.`)
+      }
+      if (item.price <= 0) {
+        messages.push(`Line ${index + 1}: price must be greater than 0.`)
+      }
+    })
+
+    return messages
+  }
+
   const handleSave = () => {
+    const validationErrors = validateForm()
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors)
+      return
+    }
+    setErrors([])
     const normalizedLineItems = trimLineItems(formState.lineItems)
 
     if (isEditMode) {
@@ -243,6 +286,16 @@ export function SalesOrderPage() {
 
   return (
     <PageShell title="Sales Order" action={<Button type="button" onClick={handleSave}>Save Order</Button>}>
+      {errors.length > 0 && (
+        <div className="mb-4 border border-slate-600 bg-slate-100 px-3 py-2 text-[12px] text-red-700">
+          <div className="font-semibold">Please fix the following before saving:</div>
+          <ul className="list-disc pl-4">
+            {errors.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
         <div className="space-y-2">
           <div className="grid grid-cols-[140px_1fr] items-center gap-3">
