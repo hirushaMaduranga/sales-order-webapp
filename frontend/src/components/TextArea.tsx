@@ -1,7 +1,7 @@
 import type { TextareaHTMLAttributes } from 'react'
 
 const baseClassName =
-  'min-h-[120px] w-full resize-none border border-slate-700 bg-white px-2 py-1 text-sm'
+  'min-h-[96px] w-full resize-none border border-slate-700 bg-white px-2 py-1 text-sm'
 
 type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement>
 
