@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from 'react'
 
-const baseClassName = 'h-8 w-full border border-slate-700 bg-white px-2 text-sm'
+const baseClassName = 'h-7 w-full border border-slate-700 bg-white px-2 text-sm'
 
 type TextInputProps = InputHTMLAttributes<HTMLInputElement>
 
