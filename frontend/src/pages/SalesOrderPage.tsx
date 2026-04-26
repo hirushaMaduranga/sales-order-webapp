@@ -22,7 +22,7 @@ const emptyLineItem = (id: string): LineItem => ({
 })
 
 const createEmptyOrder = (): SalesOrder => ({
-  id: `SO-${Math.floor(Math.random() * 9000 + 1000)}`,
+  id: '',
   customerId: '',
   customerName: '',
   address1: '',
@@ -44,6 +44,19 @@ const createEmptyOrder = (): SalesOrder => ({
   ],
 })
 
+const getNextOrderId = (orders: SalesOrder[]): string => {
+  const maxNumber = orders.reduce((max, order) => {
+    const match = order.id.match(/SO-(\d+)/)
+    if (!match) {
+      return max
+    }
+    const value = Number(match[1])
+    return Number.isNaN(value) ? max : Math.max(max, value)
+  }, 0)
+
+  return `SO-${String(maxNumber + 1).padStart(4, '0')}`
+}
+
 const padLineItems = (items: LineItem[], target: number): LineItem[] => {
   if (items.length >= target) {
     return items
@@ -56,6 +69,16 @@ const padLineItems = (items: LineItem[], target: number): LineItem[] => {
   return padded
 }
 
+const hasLineItemData = (item: LineItem) =>
+  item.itemId !== '' ||
+  item.description !== '' ||
+  item.note !== '' ||
+  item.quantity !== 0 ||
+  item.price !== 0 ||
+  item.taxRate !== 0
+
+const trimLineItems = (items: LineItem[]) => items.filter(hasLineItemData)
+
 export function SalesOrderPage() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -63,7 +86,8 @@ export function SalesOrderPage() {
   const orders = useAppSelector((state) => state.orders.orders)
   const customers = useAppSelector((state) => state.customers.customers)
   const catalogItems = useAppSelector((state) => state.items.items)
-  const existingOrder = orders.find((order) => order.id === orderId)
+  const isEditMode = Boolean(orderId)
+  const existingOrder = isEditMode ? orders.find((order) => order.id === orderId) : undefined
 
   const [formState, setFormState] = useState<SalesOrder>(() => {
     if (existingOrder) {
@@ -73,7 +97,7 @@ export function SalesOrderPage() {
   })
 
   useEffect(() => {
-    if (!orderId) {
+    if (!isEditMode) {
       setFormState(createEmptyOrder())
       return
     }
@@ -81,8 +105,8 @@ export function SalesOrderPage() {
       setFormState({ ...existingOrder, lineItems: padLineItems(existingOrder.lineItems, 5) })
       return
     }
-    setFormState(createEmptyOrder())
-  }, [existingOrder, orderId])
+    navigate('/')
+  }, [existingOrder, isEditMode, navigate])
 
   const totals = useMemo(() => {
     return formState.lineItems.reduce(
@@ -202,10 +226,17 @@ export function SalesOrderPage() {
   }
 
   const handleSave = () => {
-    if (existingOrder) {
-      dispatch(updateOrder(formState))
+    const normalizedLineItems = trimLineItems(formState.lineItems)
+
+    if (isEditMode) {
+      if (!existingOrder) {
+        navigate('/')
+        return
+      }
+      dispatch(updateOrder({ ...formState, lineItems: normalizedLineItems }))
     } else {
-      dispatch(addOrder(formState))
+      const nextId = formState.id.trim() !== '' ? formState.id : getNextOrderId(orders)
+      dispatch(addOrder({ ...formState, id: nextId, lineItems: normalizedLineItems }))
     }
     navigate('/')
   }
