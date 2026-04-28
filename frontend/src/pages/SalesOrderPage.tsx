@@ -7,6 +7,8 @@ import { TextArea } from '../components/common/TextArea'
 import { TextInput } from '../components/common/TextInput'
 import { LineItemsTable } from '../components/order/LineItemsTable'
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks'
+import { fetchCustomers } from '../features/customers/customersSlice'
+import { fetchItems } from '../features/items/itemsSlice'
 import { addOrder, updateOrder } from '../features/orders/ordersSlice'
 import type { LineItem, SalesOrder } from '../types/sales'
 
@@ -86,6 +88,8 @@ export function SalesOrderPage() {
   const orders = useAppSelector((state) => state.orders.orders)
   const customers = useAppSelector((state) => state.customers.customers)
   const catalogItems = useAppSelector((state) => state.items.items)
+  const customersStatus = useAppSelector((state) => state.customers.status)
+  const itemsStatus = useAppSelector((state) => state.items.status)
   const isEditMode = Boolean(orderId)
   const existingOrder = isEditMode ? orders.find((order) => order.id === orderId) : undefined
 
@@ -108,6 +112,15 @@ export function SalesOrderPage() {
     }
     navigate('/')
   }, [existingOrder, isEditMode, navigate])
+
+  useEffect(() => {
+    if (customersStatus === 'idle') {
+      dispatch(fetchCustomers())
+    }
+    if (itemsStatus === 'idle') {
+      dispatch(fetchItems())
+    }
+  }, [customersStatus, dispatch, itemsStatus])
 
   const totals = useMemo(() => {
     return formState.lineItems.reduce(
